@@ -34,7 +34,10 @@ int trace_fork(struct pt_regs *ctx)
     {
         char* map_value = tracked_pids.lookup(&parent_pid);
         if (map_value == NULL || *map_value == _FALSE)
+        {
+            // bpf_trace_printk("NOT-TRACKED --- Parent: %d, child: %d\\n", parent_pid, child_pid);
             return 0; // we don't track this PID so we don't care about it forking a process
+        }
         
         // we do track it
         remember_fork(parent_pid, child_pid, _TRUE);
