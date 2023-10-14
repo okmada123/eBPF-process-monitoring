@@ -1,12 +1,11 @@
 #!/usr/bin/python3
 
 from bcc import BPF
+import sys
 
 # eBPF program code
 ebpf_text = """
 #include <linux/ptrace.h>
-
-// const u32 default_pid = 4185;
 
 BPF_HASH(tracked_pids, u32, char);
 
@@ -27,7 +26,7 @@ int trace_fork(struct pt_regs *ctx)
     // return value of the fork system call
     u32 child_pid = PT_REGS_RC(ctx);
 
-    if (parent_pid == 7142)
+    if (parent_pid == #DEFAULT_PID#)
     {
         remember_fork(parent_pid, child_pid, _TRUE);
     }
@@ -44,6 +43,19 @@ int trace_fork(struct pt_regs *ctx)
     return 0;
 }
 """
+
+if (len(sys.argv) != 2):
+    print("Usage: ./fork-tracker.py <DEFAULT-PID>")
+    exit(1)
+
+try:
+    default_pid = int(sys.argv[1])
+    if default_pid <= 0: raise Exception
+except:
+    print("<DEFAULT-PID> has to be a valid PID (positive integer)")
+    exit(1)
+
+ebpf_text = ebpf_text.replace("#DEFAULT_PID#", str(default_pid))
 
 # Load the eBPF program
 b = BPF(text=ebpf_text)
