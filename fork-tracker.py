@@ -6,8 +6,30 @@ import sys
 # eBPF program code
 ebpf_text = """
 #include <linux/ptrace.h>
+#define _TRUE 1
+#define _FALSE 2 // helper functions apparently cannot return 0
 
 BPF_HASH(tracked_pids, u32, char);
+
+static int is_tracked_pid(u32 pid)
+{
+    bpf_trace_printk("inside istrackedpid: %d\\n", pid);
+    if (pid == #DEFAULT_PID#) return _TRUE;
+    
+    char* map_value = tracked_pids.lookup(&pid);
+
+    /* This works
+    bpf_trace_printk("inside 222: %p\\n", map_value);
+    if (map_value != NULL) bpf_trace_printk("inside 333: %d\\n", *map_value);
+    */
+    
+    if (map_value == NULL || *map_value == _FALSE)
+    {
+        return _FALSE;
+    }
+
+    return _TRUE;
+}
 
 static void remember_fork(u32 parent_pid, u32 child_pid, char val)
 {
@@ -20,8 +42,8 @@ static void remember_fork(u32 parent_pid, u32 child_pid, char val)
 
 KRETFUNC_PROBE(kernel_clone, void* args, int child_pid)
 {
-    char _TRUE = 1, _FALSE = 0;
     u32 parent_pid = bpf_get_current_pid_tgid();
+    if (!is_tracked_pid(parent_pid)) return _FALSE;
 
     if (parent_pid == #DEFAULT_PID#)
     {
