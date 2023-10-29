@@ -1,0 +1,18 @@
+version: '3'
+services:
+  fastapi.local:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/main.py:/app/main.py
+    depends_on:
+      - mongo.local
+  mongo.local:
+    image: mongo
+    container_name: web-stack-mongo.local
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo/init.js:/docker-entrypoint-initdb.d/mongo-init.js
