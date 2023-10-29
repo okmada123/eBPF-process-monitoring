@@ -2,6 +2,14 @@
 
 from bcc import BPF
 import sys
+import os
+import requests
+from dotenv import load_dotenv
+import json
+
+load_dotenv()
+API_URL = f"http://{os.getenv('API_HOST')}:{os.getenv('API_PORT')}/log"
+print(f"{API_URL=}")
 
 EVENT_VALUES = [
     ("FORK", "#EVENT_FORK_VALUE#", 1),
@@ -130,12 +138,29 @@ for event in EVENT_VALUES:
 b = BPF(text=ebpf_text)
 b.attach_kprobe(event=b.get_syscall_fnname("execve"), fn_name="syscall__execve")
 
-# process event
-def print_event(cpu, data, size):
+def event_to_json(event):
+    json_dict = {
+        "pid": event.pid,
+        "event_type": event.event_type,
+        "path": str(event.path),
+        "event_output_int_1": event.output_int_1,
+        "timestamp": "todo",
+    }
+    return json.dumps(json_dict)
+
+def log_event(cpu, data, size):
     event = b["events"].event(data)
     print(f"PID: {event.pid}, EVENT TYPE: {event.event_type}, PATH: {event.path} INT1: {event.output_int_1}")
+    try:
+        res = requests.post(API_URL, event_to_json(event))
+        if res.status_code != 200:
+            print("Response not OK:", res.status_code)
+    except Exception as e:
+        print(e)
+        exit(1)
+    
 
 # loop with callback to print_event
-b["events"].open_perf_buffer(print_event)
+b["events"].open_perf_buffer(log_event)
 while 1:
     b.perf_buffer_poll()

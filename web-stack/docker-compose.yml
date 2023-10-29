@@ -9,6 +9,7 @@ services:
       - sharednet
     volumes:
       - ./backend/main.py:/app/main.py
+      - ./backend/.env:/app/.env
     depends_on:
       - mongo.local
   mongo.local:
