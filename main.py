@@ -3,6 +3,12 @@
 from bcc import BPF
 import sys
 
+EVENT_VALUES = [
+    ("FORK", "#EVENT_FORK_VALUE#", 1),
+    ("EXEC", "#EVENT_EXEC_VALUE#", 2),
+    ("OPEN", "#EVENT_OPEN_VALUE#", 3)
+]
+
 ebpf_text = """
 #include <linux/ptrace.h>
 #include <uapi/linux/ptrace.h>
@@ -10,6 +16,20 @@ ebpf_text = """
 
 #define _TRUE 1
 #define _FALSE 2 // static helper functions apparently cannot return 0
+#define BUFSIZE 256
+
+#define _EVENT_FORK #EVENT_FORK_VALUE#
+#define _EVENT_EXEC #EVENT_EXEC_VALUE#
+#define _EVENT_OPEN #EVENT_OPEN_VALUE#
+
+struct output_data {
+    u8 event_type;
+    u32 pid;
+    char path[BUFSIZE];
+    u32 output_int_1;
+    u32 output_int_2;
+};
+BPF_PERF_OUTPUT(events);
 
 BPF_HASH(tracked_pids, u32, char);
 
@@ -40,7 +60,13 @@ KRETFUNC_PROBE(kernel_clone, void* args, int child_pid)
     {
         remember_fork(parent_pid, child_pid, _TRUE);
         // Print info
-        bpf_trace_printk("parent %d - fork return value: %d\\n", parent_pid, child_pid);
+        // bpf_trace_printk("parent %d - fork return value: %d\\n", parent_pid, child_pid);
+        
+        struct output_data data = {};
+        data.event_type = _EVENT_FORK;
+        data.pid = parent_pid;
+        data.output_int_1 = child_pid;
+        events.perf_submit(ctx, &data, sizeof(data));
         return 0;
     }
 }
@@ -95,13 +121,25 @@ except:
     exit(1)
 
 ebpf_text = ebpf_text.replace("#DEFAULT_PID#", str(default_pid))
+for event in EVENT_VALUES:
+    ebpf_text = ebpf_text.replace(event[1], str(event[2]))
 
 # Load the eBPF program
 b = BPF(text=ebpf_text)
 b.attach_kprobe(event=b.get_syscall_fnname("execve"), fn_name="syscall__execve")
 
-while True:
-    try:
-        print(b.trace_readline())
-    except KeyboardInterrupt:
-        break
+# while True:
+#     try:
+#         print(b.trace_readline())
+#     except KeyboardInterrupt:
+#         break
+
+# process event
+def print_event(cpu, data, size):
+    event = b["events"].event(data)
+    print(f"PID: {event.pid}, EVENT TYPE: {event.event_type}, INT1: {event.output_int_1}")
+
+# loop with callback to print_event
+b["events"].open_perf_buffer(print_event)
+while 1:
+    b.perf_buffer_poll()
