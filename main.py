@@ -130,12 +130,6 @@ for event in EVENT_VALUES:
 b = BPF(text=ebpf_text)
 b.attach_kprobe(event=b.get_syscall_fnname("execve"), fn_name="syscall__execve")
 
-# while True:
-#     try:
-#         print(b.trace_readline())
-#     except KeyboardInterrupt:
-#         break
-
 # process event
 def print_event(cpu, data, size):
     event = b["events"].event(data)
