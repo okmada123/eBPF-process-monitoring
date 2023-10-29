@@ -6,6 +6,7 @@ import os
 import requests
 from dotenv import load_dotenv
 import json
+from time import time_ns
 
 load_dotenv()
 API_URL = f"http://{os.getenv('API_HOST')}:{os.getenv('API_PORT')}/log"
@@ -144,7 +145,7 @@ def event_to_json(event):
         "event_type": event.event_type,
         "path": str(event.path),
         "event_output_int_1": event.output_int_1,
-        "timestamp": "todo",
+        "timestamp": time_ns(),
     }
     return json.dumps(json_dict)
 
