@@ -9,15 +9,6 @@ load_dotenv()
 mongo_client = pymongo.MongoClient(f"mongodb://{os.getenv('MONGO_HOST')}:{os.getenv('MONGO_PORT')}")
 db = mongo_client[os.getenv('DB_NAME')]
 collection = db["default"]
-# data = {
-#     "pid": 1,
-#     "event_type": "example",
-#     "path": "/example123",
-#     "int1": 42,
-#     "int2": 100
-# }
-
-# collection.insert_one(data)
 
 app = FastAPI()
 
