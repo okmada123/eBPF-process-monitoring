@@ -98,16 +98,20 @@ KRETFUNC_PROBE(do_sys_openat2, int dirfd, const char *pathname)
     u32 pid = bpf_get_current_pid_tgid();
     if (is_tracked_pid(pid) != _TRUE) return 0;
 
-    char buff[256];
-    if (bpf_probe_read_user(buff, sizeof(buff), pathname) == 0) {
-        if (buff[0] == '/')
-            bpf_trace_printk("absolute path file open: %s\\n", buff);
+    // char buff[256];
+    struct output_data data = {};
+    if (bpf_probe_read_user(&data.path, sizeof(data.path), pathname) == 0) {
+        data.pid = pid;
+        data.event_type = _EVENT_OPEN;
+        if (data.path[0] == '/')
+            data.output_int_1 = _TRUE; // is absolute path
         else {
             if (dirfd == AT_FDCWD)
-                bpf_trace_printk("relative path file open: %s, at current working directory (%d)\\n", buff, dirfd); // TODO - can we find the path of the current working directory?
-            else
-                bpf_trace_printk("relative path file open: %s, NOT the current working directory... (%d)\\n", buff, dirfd);
+                data.output_int_1 = _FALSE; // is relative path at CWD
+            // else // is relative path not at CWD - don't know if this could even happen
+                // bpf_trace_printk("relative path file open: %s, NOT the current working directory... (%d)\\n", buff, dirfd);
         }
+        events.perf_submit(ctx, &data, sizeof(data));
     }
     return 0;
 }
