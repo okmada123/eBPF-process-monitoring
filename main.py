@@ -76,17 +76,21 @@ int syscall__execve(struct pt_regs *ctx, const char *filename)
     u32 pid = bpf_get_current_pid_tgid();
     if (is_tracked_pid(pid) != _TRUE) return 0;
 
-    char buff[256];
-    if (bpf_probe_read_user(buff, sizeof(buff), filename) == 0)
+    struct output_data data = {};
+    // char buff[256];
+    if (bpf_probe_read_user(&data.path, sizeof(data.path), filename) == 0)
     {
-        bpf_trace_printk("execve: %s\\n", buff);
+        // bpf_trace_printk("execve: %s\\n", buff);
+        data.event_type = _EVENT_EXEC;
+        data.pid = pid;
+        events.perf_submit(ctx, &data, sizeof(data));
+        return 0;
     }
     else
     {
-        bpf_trace_printk("execve, but user space read failed\\n");
+        // bpf_trace_printk("execve, but user space read failed\\n");
+        return 1;
     }
-
-    return 0;
 }
 
 KRETFUNC_PROBE(do_sys_openat2, int dirfd, const char *pathname)
@@ -137,7 +141,7 @@ b.attach_kprobe(event=b.get_syscall_fnname("execve"), fn_name="syscall__execve")
 # process event
 def print_event(cpu, data, size):
     event = b["events"].event(data)
-    print(f"PID: {event.pid}, EVENT TYPE: {event.event_type}, INT1: {event.output_int_1}")
+    print(f"PID: {event.pid}, EVENT TYPE: {event.event_type}, PATH: {event.path} INT1: {event.output_int_1}")
 
 # loop with callback to print_event
 b["events"].open_perf_buffer(print_event)
