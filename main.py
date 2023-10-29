@@ -46,9 +46,9 @@ static int is_tracked_pid(u32 pid)
     return _TRUE;
 }
 
+/* remember child value in the map so that we can track it */
 static void remember_fork(u32 parent_pid, u32 child_pid, char val)
 {
-    // remember child value in the map so that we can track it
     tracked_pids.insert(&child_pid, &val);
 }
 
@@ -59,8 +59,6 @@ KRETFUNC_PROBE(kernel_clone, void* args, int child_pid)
     else
     {
         remember_fork(parent_pid, child_pid, _TRUE);
-        // Print info
-        // bpf_trace_printk("parent %d - fork return value: %d\\n", parent_pid, child_pid);
         
         struct output_data data = {};
         data.event_type = _EVENT_FORK;
@@ -77,18 +75,15 @@ int syscall__execve(struct pt_regs *ctx, const char *filename)
     if (is_tracked_pid(pid) != _TRUE) return 0;
 
     struct output_data data = {};
-    // char buff[256];
     if (bpf_probe_read_user(&data.path, sizeof(data.path), filename) == 0)
     {
-        // bpf_trace_printk("execve: %s\\n", buff);
         data.event_type = _EVENT_EXEC;
         data.pid = pid;
         events.perf_submit(ctx, &data, sizeof(data));
         return 0;
     }
-    else
+    else // bpf_probe_read_user failed
     {
-        // bpf_trace_printk("execve, but user space read failed\\n");
         return 1;
     }
 }
@@ -98,7 +93,6 @@ KRETFUNC_PROBE(do_sys_openat2, int dirfd, const char *pathname)
     u32 pid = bpf_get_current_pid_tgid();
     if (is_tracked_pid(pid) != _TRUE) return 0;
 
-    // char buff[256];
     struct output_data data = {};
     if (bpf_probe_read_user(&data.path, sizeof(data.path), pathname) == 0) {
         data.pid = pid;
