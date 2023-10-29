@@ -5,6 +5,8 @@ services:
       context: ./backend
     ports:
       - "8000:8000"
+    networks:
+      - sharednet
     volumes:
       - ./backend/main.py:/app/main.py
     depends_on:
@@ -12,7 +14,10 @@ services:
   mongo.local:
     image: mongo
     container_name: web-stack-mongo.local
-    ports:
-      - "27017:27017"
+    networks:
+      - sharednet
     volumes:
       - ./mongo/init.js:/docker-entrypoint-initdb.d/mongo-init.js
+
+networks:
+  sharednet:
