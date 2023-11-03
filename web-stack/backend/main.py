@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 import pymongo
 import json
@@ -23,8 +23,22 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
+    return "Hello!!!"
+
+@app.get("/get_recent")
+def get_new_data(last_timestamp = Query(None)):
+    try:
+        last_timestamp = int(last_timestamp)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Bad request. Expecting ?last_timestamp=INTEGER. {str(e)}")
+    data = list(collection.find({"timestamp": {"$gt": int(last_timestamp)}}))
+    #print(data)
+    return json.dumps(data, default=str)
+
+@app.get("/get_all")
+def get_all_data():
     data = list(collection.find({}))
-    # print(data)
+    #print(data)
     return json.dumps(data, default=str)
 
 @app.post("/log")

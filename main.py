@@ -145,7 +145,7 @@ def event_to_json(event):
         "event_type": event.event_type,
         "path": event.path.decode(),
         "event_output_int_1": event.output_int_1,
-        "timestamp": time_ns(),
+        "timestamp": time_ns() // 1000000,
     }
     return json.dumps(json_dict)
 

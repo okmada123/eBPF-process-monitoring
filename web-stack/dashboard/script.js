@@ -1,14 +1,15 @@
 const API_URL = "http://localhost:8000";
-const RELOAD_INTERVAL = 500 // ms
+const RELOAD_INTERVAL = 2000 // ms
 var data = [];
 
 const fetch_data = async () => {
-    const res = await fetch(API_URL);
+    let last_ts = (data.length > 0 ? data[data.length-1].timestamp : 0)
+    const res = await fetch(`${API_URL}/get_recent?last_timestamp=${last_ts}`);
     const response_text = await res.json();
-    const new_data = JSON.parse(response_text);
-    data.push(new_data); // store locally
-
+    const new_data = await JSON.parse(response_text);
+    
     new_data.forEach(element => {
+        data.push(element); // store locally
         add_table_row(element);
     });
 }
