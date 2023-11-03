@@ -1,46 +1,31 @@
 <html>
     <head>
         <title>Monitoring Dashboard</title>
-        <script>
-            const API_URL = "http://localhost:8000";
-            const RELOAD_INTERVAL = 500 // ms
-
-            const fetchtest = async () => {
-                const res = await fetch(API_URL);
-                const response_text = await res.json();
-                data = JSON.parse(response_text);
-                print_rows(data);
+        <script src="script.js"></script>
+        <style>
+            table {
+              border-collapse: collapse;
+              width: 100%;
             }
-
-            const print_rows = (data) => {
-                const dashboard_div = document.getElementById("rows");
-                dashboard_div.innerHTML = '';
-
-                data.forEach((item, index) => {
-                    const p = document.createElement("p");
-                    p.textContent = JSON.stringify(item);
-                    dashboard_div.appendChild(p);
-                });
+          
+            th, td {
+              border: 1px solid #000;
+              padding: 8px;
+              text-align: center;
             }
-
-            const mainloop = async () => {
-                while (true) {
-                    try {
-                        await fetchtest();
-                    } catch (err) {
-                        console.error(err);
-                        break;
-                    }
-                    await new Promise(resolve => setTimeout(resolve, RELOAD_INTERVAL));
-                }
-            }
-
-            mainloop();
-        </script>
+        </style>
     </head>
     <body>
         <h1>Dashboard</h1>
-        <button onclick="fetchtest()">Click me!</button>
-        <div id="rows"></div>
+        <table id="events-table">
+            <tr>
+                <th>Timestamp</th>
+                <th>PID</th>
+                <th>Event</th>
+                <th>Path</th>
+                <th>Value1</th>
+                <th>Value2</th>
+            </tr>
+        </table>
     </body>
 </html>

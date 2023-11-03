@@ -28,6 +28,7 @@ services:
       - sharednet
     volumes:
       - ./dashboard/index.html:/usr/share/nginx/html/index.html
+      - ./dashboard/script.js:/usr/share/nginx/html/script.js
 
 networks:
   sharednet:

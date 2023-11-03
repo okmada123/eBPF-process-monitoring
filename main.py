@@ -143,7 +143,7 @@ def event_to_json(event):
     json_dict = {
         "pid": event.pid,
         "event_type": event.event_type,
-        "path": str(event.path),
+        "path": event.path.decode(),
         "event_output_int_1": event.output_int_1,
         "timestamp": time_ns(),
     }
