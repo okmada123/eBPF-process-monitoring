@@ -1,0 +1,18 @@
+<html>
+    <head>
+        <title>Monitoring Dashboard</title>
+        <script>
+            const API_URL = "http://localhost:8000";
+
+            const fetchtest = async () => {
+                const res = await fetch(API_URL);
+                const response_text = await res.json();
+                console.log(response_text);
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Dashboard</h1>
+        <button onclick="fetchtest()">Click me!</button>
+    </body>
+</html>

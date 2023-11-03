@@ -19,6 +19,15 @@ services:
       - sharednet
     volumes:
       - ./mongo/init.js:/docker-entrypoint-initdb.d/mongo-init.js
+  dashboard.local:
+    build:
+      context: ./dashboard
+    ports:
+      - "8080:80"
+    networks:
+      - sharednet
+    volumes:
+      - ./dashboard/index.html:/usr/share/nginx/html/index.html
 
 networks:
   sharednet:
