@@ -24,7 +24,7 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     data = list(collection.find({}))
-    print(data)
+    # print(data)
     return json.dumps(data, default=str)
 
 @app.post("/log")
