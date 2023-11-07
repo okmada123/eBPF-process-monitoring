@@ -1,5 +1,5 @@
 const API_URL = "http://localhost:8000";
-const RELOAD_INTERVAL = 2000 // ms
+const RELOAD_INTERVAL = 1000 // ms
 var data = [];
 
 const fetch_data = async () => {
