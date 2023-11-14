@@ -1,0 +1,9 @@
+{
+    "id": "_id",
+    "pid": "pid",
+    "path": "path",
+    "type": "event_type",
+    "output1": "event_output_int_1",
+    "output2": "event_output_int_2",
+    "timestamp": "timestamp"
+}

@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime
 import pymongo
 import json
 import config
@@ -33,13 +34,13 @@ def get_new_data(last_timestamp = Query(None)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Bad request. Expecting ?last_timestamp=INTEGER. {str(e)}")
     data = list(collection.find({"timestamp": {"$gt": int(last_timestamp)}}))
-    #print(data)
+    format_data(data)
     return json.dumps(data, default=str)
 
+# Dump everything, unformatted
 @app.get("/get_all")
 def get_all_data():
     data = list(collection.find({}))
-    #print(data)
     return json.dumps(data, default=str)
 
 @app.post("/log")
@@ -49,3 +50,23 @@ async def log_one(request: Request):
         collection.insert_one(data)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error inserting data: {str(e)}")
+
+# TODO - change
+def color(row):
+    if row[config.COLUMNS["type"]] == "fork":
+        row["color"] = "blue"
+    elif row[config.COLUMNS["type"]] == "open":
+        row["color"] = "white"
+    elif row[config.COLUMNS["type"]] == "exec":
+        row["color"] = "red"
+
+
+def format_data(data):
+    for row in data:
+        row.pop(config.COLUMNS["id"]) # remove mongo _id
+        row[config.COLUMNS["type"]] = config.EVENTS[str(row[config.COLUMNS["type"]])] # replace event_type (integer) with text equivalent
+        color(row) # apply correct color to the data row
+        
+        # timestamp in ms is still needed in frontend, so I will move the conversion there
+        # row[config.COLUMNS["timestamp"]] = datetime.fromtimestamp(row[config.COLUMNS["timestamp"]]//1000) # replace ms timestamp with human readable format (/1000 to convert from ms to seconds)
+    return data
