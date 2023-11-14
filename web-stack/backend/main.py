@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 import pymongo
 import json
+import config
 
 load_dotenv()
 

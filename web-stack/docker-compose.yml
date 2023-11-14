@@ -8,8 +8,8 @@ services:
     networks:
       - sharednet
     volumes:
-      - ./backend/main.py:/app/main.py
-      - ./backend/.env:/app/.env
+      #- ./backend/main.py:/app/main.py
+      - ./backend/:/app/
     depends_on:
       - mongo.local
   mongo.local:
