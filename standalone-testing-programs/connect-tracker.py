@@ -44,13 +44,13 @@ KRETFUNC_PROBE(kernel_clone, void* args, int child_pid)
     }
 }
 
-KFUNC_PROBE(__sys_connect, void* args)
+KRETFUNC_PROBE(__sys_connect, int fd, struct sockaddr *uservaddr, int addrlen, int rv)
 {
     u32 pid = bpf_get_current_pid_tgid();
     if (is_tracked_pid(pid) != _TRUE) return 0;
     else
     {
-        bpf_trace_printk("pid %d connect: \\n", pid);
+        bpf_trace_printk("pid %d connect: %d\\n", pid, rv);
         return 0;
     }
 }
