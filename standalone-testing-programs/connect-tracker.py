@@ -7,6 +7,7 @@ import sys
 ebpf_text = """
 #include <linux/ptrace.h>
 #include <linux/socket.h>
+#include <net/sock.h>
 #define _TRUE 1
 #define _FALSE 2 // static helper functions apparently cannot return 0
 
@@ -44,13 +45,28 @@ KRETFUNC_PROBE(kernel_clone, void* args, int child_pid)
     }
 }
 
+/*
 KRETFUNC_PROBE(__sys_connect, int fd, struct sockaddr *uservaddr, int addrlen, int rv)
 {
     u32 pid = bpf_get_current_pid_tgid();
     if (is_tracked_pid(pid) != _TRUE) return 0;
     else
     {
-        bpf_trace_printk("pid %d connect: %d\\n", pid, rv);
+        bpf_trace_printk("pid %d connect\\n", pid);
+        return 0;
+    }
+}
+*/
+
+// https://elixir.bootlin.com/linux/latest/source/include/net/sock.h
+KRETFUNC_PROBE(tcp_v4_connect, struct sock *sk)
+{
+    u32 pid = bpf_get_current_pid_tgid();
+    if (is_tracked_pid(pid) != _TRUE) return 0;
+    else
+    {
+        bpf_trace_printk("pid %d tcp_v4_connect\\n", pid);
+        bpf_trace_printk("addr? %d\\n", sk->__sk_common.skc_daddr);
         return 0;
     }
 }
