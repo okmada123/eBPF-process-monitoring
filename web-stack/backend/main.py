@@ -60,13 +60,9 @@ def color(row):
     elif row[config.COLUMNS["type"]] == "exec":
         row["color"] = "red"
 
-
 def format_data(data):
     for row in data:
         row.pop(config.COLUMNS["id"]) # remove mongo _id
         row[config.COLUMNS["type"]] = config.EVENTS[str(row[config.COLUMNS["type"]])] # replace event_type (integer) with text equivalent
         color(row) # apply correct color to the data row
-        
-        # timestamp in ms is still needed in frontend, so I will move the conversion there
-        # row[config.COLUMNS["timestamp"]] = datetime.fromtimestamp(row[config.COLUMNS["timestamp"]]//1000) # replace ms timestamp with human readable format (/1000 to convert from ms to seconds)
     return data
