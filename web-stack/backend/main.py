@@ -59,6 +59,8 @@ def color(row):
         row["color"] = "white"
     elif row[config.COLUMNS["type"]] == "exec":
         row["color"] = "red"
+    elif row[config.COLUMNS["type"]] == "connect":
+        row["color"] = "green"
 
 def format_data(data):
     for row in data:

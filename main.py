@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 import json
 from time import time_ns
 
+USE_BACKEND_TOGGLE = True # TODO - remove
+
 load_dotenv()
 API_URL = f"http://{os.getenv('API_HOST')}:{os.getenv('API_PORT')}/log"
 print(f"{API_URL=}")
@@ -15,13 +17,17 @@ print(f"{API_URL=}")
 EVENT_VALUES = [
     ("FORK", "#EVENT_FORK_VALUE#", 1),
     ("EXEC", "#EVENT_EXEC_VALUE#", 2),
-    ("OPEN", "#EVENT_OPEN_VALUE#", 3)
+    ("OPEN", "#EVENT_OPEN_VALUE#", 3),
+    ("CONNECT", "#EVENT_CONNECT_VALUE#", 4)
 ]
 
 ebpf_text = """
 #include <linux/ptrace.h>
 #include <uapi/linux/ptrace.h>
 #include <asm/fcntl.h>
+#include <linux/socket.h>
+#include <net/sock.h>
+#include <linux/inet.h> // ntohs()
 
 #define _TRUE 1
 #define _FALSE 2 // static helper functions apparently cannot return 0
@@ -30,6 +36,7 @@ ebpf_text = """
 #define _EVENT_FORK #EVENT_FORK_VALUE#
 #define _EVENT_EXEC #EVENT_EXEC_VALUE#
 #define _EVENT_OPEN #EVENT_OPEN_VALUE#
+#define _EVENT_CONNECT #EVENT_CONNECT_VALUE#
 
 struct output_data {
     u8 event_type;
@@ -37,6 +44,8 @@ struct output_data {
     char path[BUFSIZE];
     u32 output_int_1;
     u32 output_int_2;
+    u32 output_int_3;
+    u32 output_int_4;
 };
 BPF_PERF_OUTPUT(events);
 
@@ -118,6 +127,26 @@ KRETFUNC_PROBE(do_sys_openat2, int dirfd, const char *pathname)
     }
     return 0;
 }
+
+// https://elixir.bootlin.com/linux/latest/source/include/net/tcp.h
+// https://elixir.bootlin.com/linux/latest/source/include/net/sock.h
+KRETFUNC_PROBE(tcp_v4_connect, struct sock *sk)
+{
+    u32 pid = bpf_get_current_pid_tgid();
+    if (is_tracked_pid(pid) != _TRUE) return 0;
+    else
+    {
+        struct output_data data = {};
+        data.event_type = _EVENT_CONNECT;
+        data.pid = pid;
+        data.output_int_1 = sk->__sk_common.skc_rcv_saddr; // src addr
+        data.output_int_2 = sk->__sk_common.skc_num; // src port
+        data.output_int_3 = sk->__sk_common.skc_daddr; // dst addr
+        data.output_int_4 = ntohs(sk->__sk_common.skc_dport); // dst port
+        events.perf_submit(ctx, &data, sizeof(data));
+        return 0;
+    }
+}
 """
 
 if (len(sys.argv) != 2):
@@ -151,7 +180,8 @@ def event_to_json(event):
 
 def log_event(cpu, data, size):
     event = b["events"].event(data)
-    print(f"PID: {event.pid}, EVENT TYPE: {event.event_type}, PATH: {event.path} INT1: {event.output_int_1}")
+    print(f"PID: {event.pid}, EVENT TYPE: {event.event_type}, PATH: {event.path} INT1: {event.output_int_1}, INT2: {event.output_int_2}, INT3: {event.output_int_3}, INT4: {event.output_int_4}")
+    if (not USE_BACKEND_TOGGLE): return
     try:
         res = requests.post(API_URL, event_to_json(event))
         if res.status_code != 200:
