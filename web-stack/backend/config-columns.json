@@ -3,7 +3,7 @@
     "pid": "pid",
     "path": "path",
     "type": "event_type",
-    "output1": "event_output_int_1",
-    "output2": "event_output_int_2",
+    "output1": "event_output_1",
+    "output2": "event_output_2",
     "timestamp": "timestamp"
 }

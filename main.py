@@ -1,11 +1,8 @@
 #!/usr/bin/python3
 
+import sys, os, requests, socket, struct, json
 from bcc import BPF
-import sys
-import os
-import requests
 from dotenv import load_dotenv
-import json
 from time import time_ns
 
 USE_BACKEND_TOGGLE = True # TODO - remove
@@ -14,11 +11,16 @@ load_dotenv()
 API_URL = f"http://{os.getenv('API_HOST')}:{os.getenv('API_PORT')}/log"
 print(f"{API_URL=}")
 
+EVENT_FORK = 1
+EVENT_EXEC = 2
+EVENT_OPEN = 3
+EVENT_CONNECT = 4
+
 EVENT_VALUES = [
-    ("FORK", "#EVENT_FORK_VALUE#", 1),
-    ("EXEC", "#EVENT_EXEC_VALUE#", 2),
-    ("OPEN", "#EVENT_OPEN_VALUE#", 3),
-    ("CONNECT", "#EVENT_CONNECT_VALUE#", 4)
+    ("FORK", "#EVENT_FORK_VALUE#", EVENT_FORK),
+    ("EXEC", "#EVENT_EXEC_VALUE#", EVENT_EXEC),
+    ("OPEN", "#EVENT_OPEN_VALUE#", EVENT_OPEN),
+    ("CONNECT", "#EVENT_CONNECT_VALUE#", EVENT_CONNECT)
 ]
 
 ebpf_text = """
@@ -173,9 +175,19 @@ def event_to_json(event):
         "pid": event.pid,
         "event_type": event.event_type,
         "path": event.path.decode(),
-        "event_output_int_1": event.output_int_1,
+        "event_output_1": event.output_int_1,
+        "event_output_2": event.output_int_2,
         "timestamp": time_ns() // 1000000,
     }
+    # Create socket strings for connect
+    if event.event_type == EVENT_CONNECT:
+        srcaddr = socket.inet_ntoa(struct.pack("<L", event.output_int_1))
+        dstaddr = socket.inet_ntoa(struct.pack("<L", event.output_int_3))
+        lsocket = f"{srcaddr}:{event.output_int_2}"
+        dsocket = f"{dstaddr}:{event.output_int_4}"
+        json_dict["event_output_1"] = lsocket
+        json_dict["event_output_2"] = dsocket
+    
     return json.dumps(json_dict)
 
 def log_event(cpu, data, size):

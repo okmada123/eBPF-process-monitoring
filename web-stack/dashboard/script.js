@@ -22,8 +22,8 @@ const add_table_row = (element) => {
     row.innerHTML += `<th>${element["pid"]}</th>`
     row.innerHTML += `<th>${element["event_type"]}</th>`
     row.innerHTML += `<th>${element["path"]}</th>`
-    row.innerHTML += `<th>${element["event_output_int_1"]}</th>`
-    row.innerHTML += `<th>${element["event_output_int_2"]}</th>`
+    row.innerHTML += `<th>${element["event_output_1"]}</th>`
+    row.innerHTML += `<th>${element["event_output_2"]}</th>`
     row.style.backgroundColor = element["color"]
     
     // This dumps the row in the order that it comes in from backend
