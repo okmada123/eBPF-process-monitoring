@@ -5,5 +5,6 @@
     - check this https://stackoverflow.com/questions/1188757/retrieve-filename-from-file-descriptor-in-c
 - [X] [API+Dashboard] - add 'color' in API response, and print the rows with this color in the dashboard
 - [ ] [API] - add config and use colors based on allowed paths/binaries, etc - from the config
+- [ ] [connection-tracking] - add IPv6 support (this will probably end up in 'future work')
 
 Useful development tool: `bpftrace`

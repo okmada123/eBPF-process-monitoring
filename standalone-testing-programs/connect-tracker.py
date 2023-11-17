@@ -8,6 +8,7 @@ ebpf_text = """
 #include <linux/ptrace.h>
 #include <linux/socket.h>
 #include <net/sock.h>
+#include <linux/inet.h> // ntohs()
 #define _TRUE 1
 #define _FALSE 2 // static helper functions apparently cannot return 0
 
@@ -47,6 +48,7 @@ KRETFUNC_PROBE(kernel_clone, void* args, int child_pid)
 
 // https://elixir.bootlin.com/linux/latest/source/include/net/tcp.h
 // https://elixir.bootlin.com/linux/latest/source/include/net/sock.h
+// socket.inet_ntoa(struct.pack("<L", 1847982990))
 KRETFUNC_PROBE(tcp_v4_connect, struct sock *sk)
 {
     u32 pid = bpf_get_current_pid_tgid();
@@ -54,10 +56,11 @@ KRETFUNC_PROBE(tcp_v4_connect, struct sock *sk)
     else
     {
         bpf_trace_printk("pid %d tcp_v4_connect\\n", pid);
-        // all are little endian
         bpf_trace_printk("saddr %d\\n", sk->__sk_common.skc_rcv_saddr);
         bpf_trace_printk("daddr %d\\n", sk->__sk_common.skc_daddr);
-        bpf_trace_printk("dport %u\\n", sk->__sk_common.skc_portpair);
+
+        bpf_trace_printk("dport %d\\n", ntohs(sk->__sk_common.skc_dport));
+        bpf_trace_printk("sport %d\\n", sk->__sk_common.skc_num);
         return 0;
     }
 }
