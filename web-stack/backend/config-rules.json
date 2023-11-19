@@ -1,1 +1,18 @@
-{"foo":"bar"}
+{
+    "exec": {
+        "Deny": [
+            ".*whoami$",
+            ".*ping$",
+            ".*curl$",
+            ".*nc"
+        ]
+    },
+    "open": {
+        "Allow": [
+            "^/etc/hosts$",
+            "^/etc/resolv.conf$",
+            "^/lib.*",
+            ".*"
+        ]
+    }
+}

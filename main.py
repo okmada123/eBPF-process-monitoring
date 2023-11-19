@@ -201,7 +201,8 @@ def log_event(cpu, data, size):
     except Exception as e:
         print(e)
         exit(1)
-    
+
+print(f"Monitoring of {default_pid} started...")
 
 # loop with callback to print_event
 b["events"].open_perf_buffer(log_event)

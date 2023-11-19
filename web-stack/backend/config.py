@@ -1,4 +1,8 @@
 import json
+ALLOW_COLOR = "white"
+DENY_COLOR = "red"
+NEUTRAL_COLOR = "white"
+
 EVENTS = {}
 RULES = {}
 COLUMNS = {}

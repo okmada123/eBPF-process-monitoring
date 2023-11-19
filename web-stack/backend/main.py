@@ -2,10 +2,10 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
 import pymongo
 import json
 import config
+import re
 
 load_dotenv()
 
@@ -51,20 +51,60 @@ async def log_one(request: Request):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error inserting data: {str(e)}")
 
-# TODO - change
-def color(row):
-    if row[config.COLUMNS["type"]] == "fork":
-        row["color"] = "blue"
-    elif row[config.COLUMNS["type"]] == "open":
-        row["color"] = "white"
-    elif row[config.COLUMNS["type"]] == "exec":
-        row["color"] = "red"
-    elif row[config.COLUMNS["type"]] == "connect":
-        row["color"] = "green"
-
 def format_data(data):
     for row in data:
         row.pop(config.COLUMNS["id"]) # remove mongo _id
         row[config.COLUMNS["type"]] = config.EVENTS[str(row[config.COLUMNS["type"]])] # replace event_type (integer) with text equivalent
-        color(row) # apply correct color to the data row
+        apply_colors(row) # apply correct color to the data row
     return data
+
+def get_rules(event_type):
+    # Afaik, there is no better way to do this in Python, so I will leave this stupid double try/except code here :)
+    allow_regexes = None
+    deny_regexes = None
+    try:
+        allow_regexes = config.RULES[event_type]["Allow"]
+    except KeyError:
+        pass
+    try:
+        deny_regexes = config.RULES[event_type]["Deny"]
+    except KeyError:
+        pass
+    if allow_regexes is not None and deny_regexes is not None:
+        raise RuntimeError("Bad config. Only one of the fields 'Allow' and 'Deny' is allowed in 'config-rules.json' for an event.")
+    return allow_regexes, deny_regexes
+
+def is_matching(path, regexes):
+    for rgx in regexes:
+        if re.search(rgx, path) is not None:
+            return True
+    return False
+
+def apply_colors(row):
+    default_color = config.NEUTRAL_COLOR
+    row["color"] = default_color
+    if len(row[config.COLUMNS["path"]]) == 0:
+        return
+    
+    event_type = row[config.COLUMNS["type"]]
+    path = row[config.COLUMNS["path"]]
+    get_rules(event_type)
+    allow_regexes, deny_regexes = get_rules(event_type)
+    if allow_regexes is None and deny_regexes is None: # No rules for this event
+        return
+    
+    regexes = []
+    matching_color = None
+    if allow_regexes is not None: # non-empty allow list means that everything is denied by default
+        default_color = config.DENY_COLOR
+        regexes = allow_regexes
+        matching_color = config.ALLOW_COLOR
+    else:
+        default_color = config.ALLOW_COLOR # non-empty deny list means that everything is allowed by default
+        regexes = deny_regexes
+        matching_color = config.DENY_COLOR
+    
+    if is_matching(path, regexes):
+        row["color"] = matching_color
+    else:
+        row["color"] = default_color

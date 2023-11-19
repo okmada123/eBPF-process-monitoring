@@ -4,7 +4,11 @@
 - [ ] [open-tracking] when AT_FDCWD is used, is it possible to find out what the current working directory is?
     - check this https://stackoverflow.com/questions/1188757/retrieve-filename-from-file-descriptor-in-c
 - [X] [API+Dashboard] - add 'color' in API response, and print the rows with this color in the dashboard
-- [ ] [API] - add config and use colors based on allowed paths/binaries, etc - from the config
-- [ ] [connection-tracking] - add IPv6 support (this will probably end up in 'future work')
+- [X] [API] - add config and use colors based on allowed paths/binaries, etc - from the config
+- [ ] [API] - add regex handling for 'connect' (these events use different fields, not 'path')
 
 Useful development tool: `bpftrace`
+
+# Future work
+
+- [ ] [connection-tracking] - add IPv6 support
