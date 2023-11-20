@@ -2,6 +2,20 @@ const API_URL = "http://localhost:8000";
 const RELOAD_INTERVAL = 1000 // ms
 var data = [];
 
+const delete_all = async () => {
+    const res = await fetch(`${API_URL}/delete_all`);
+    if (res.status != 200) {
+        const response_text = await res.text();
+        alert("Deleting all failed " + response_text);
+        return;
+    }
+
+    data = []; // clear the local data array
+    // clear the table
+    const table = document.getElementById("events-table");
+    while (table.rows.length != 1) table.deleteRow(1);
+}
+
 const fetch_data = async () => {
     let last_ts = (data.length > 0 ? data[data.length-1].timestamp : 0)
     const res = await fetch(`${API_URL}/get_recent?last_timestamp=${last_ts}`);

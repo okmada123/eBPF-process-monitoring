@@ -27,6 +27,13 @@ app.add_middleware(
 def read_root():
     return "Hello!!!"
 
+@app.get("/delete_all")
+def delete_all_rows():
+    try:
+        collection.delete_many({})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Removing the rows failed for some reason. {str(e)}")
+
 @app.get("/get_recent")
 def get_new_data(last_timestamp = Query(None)):
     try:
