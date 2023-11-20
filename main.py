@@ -6,10 +6,10 @@ from dotenv import load_dotenv
 from time import time_ns
 
 USE_BACKEND_TOGGLE = True # TODO - remove
+C_CODE_PID_VARIABLE = "pid" # variable name representing the PID in the C code, preceeding #DEFAULT_PID# placeholder
 
 load_dotenv()
 API_URL = f"http://{os.getenv('API_HOST')}:{os.getenv('API_PORT')}/log"
-print(f"{API_URL=}")
 
 EVENT_FORK = 1
 EVENT_EXEC = 2
@@ -151,18 +151,26 @@ KRETFUNC_PROBE(tcp_v4_connect, struct sock *sk)
 }
 """
 
-if (len(sys.argv) != 2):
-    print("Usage: ./fork-tracker.py <DEFAULT-PID>")
+if (len(sys.argv) < 2):
+    print("Usage: ./main.py <DEFAULT-PID> [ANOTHER-PID-1] [ANOTHER-PID-2] ... ")
     exit(1)
 
+monitored_pids = []
 try:
-    default_pid = int(sys.argv[1])
-    if default_pid <= 0: raise Exception
+    for i in range(1, len(sys.argv)):
+        pid = int(sys.argv[i])
+        if pid <= 0: raise Exception
+        monitored_pids.append(pid)
 except:
-    print("<DEFAULT-PID> has to be a valid PID (positive integer)")
+    print("<PID> has to be a positive integer.")
     exit(1)
 
-ebpf_text = ebpf_text.replace("#DEFAULT_PID#", str(default_pid))
+monitored_pids_replace_string = str(monitored_pids[0])
+if (len(monitored_pids) > 1):
+    for i in range(1, len(monitored_pids)):
+        monitored_pids_replace_string += f" || {C_CODE_PID_VARIABLE} == {str(monitored_pids[i])}"
+ebpf_text = ebpf_text.replace("#DEFAULT_PID#", monitored_pids_replace_string)
+
 for event in EVENT_VALUES:
     ebpf_text = ebpf_text.replace(event[1], str(event[2]))
 
@@ -202,7 +210,7 @@ def log_event(cpu, data, size):
         print(e)
         exit(1)
 
-print(f"Monitoring of {default_pid} started...")
+print(f"Monitoring of {monitored_pids} started...")
 
 # loop with callback to print_event
 b["events"].open_perf_buffer(log_event)

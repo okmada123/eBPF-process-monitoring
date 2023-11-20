@@ -1,7 +1,6 @@
 {
     "exec": {
         "Deny": [
-            ".*whoami$",
             ".*ping$",
             ".*curl$",
             ".*nc"
