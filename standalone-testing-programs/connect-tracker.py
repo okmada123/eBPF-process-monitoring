@@ -67,7 +67,7 @@ KRETFUNC_PROBE(tcp_v4_connect, struct sock *sk)
 }
 */
 
-/* This works, but prints every packet which is a little too much... */
+/* This works (kinda), but prints every packet which is a little too much... */
 KRETFUNC_PROBE(tcp_v4_do_rcv, struct sock* sk)
 {
     u32 pid = bpf_get_current_pid_tgid();

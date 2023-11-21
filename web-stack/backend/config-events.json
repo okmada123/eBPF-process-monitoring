@@ -2,5 +2,6 @@
     "1": "fork",
     "2": "exec",
     "3": "open",
-    "4": "connect"
+    "4": "connect",
+    "5": "accept"
 }

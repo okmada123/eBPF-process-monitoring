@@ -15,12 +15,14 @@ EVENT_FORK = 1
 EVENT_EXEC = 2
 EVENT_OPEN = 3
 EVENT_CONNECT = 4
+EVENT_ACCEPT = 5
 
 EVENT_VALUES = [
     ("FORK", "#EVENT_FORK_VALUE#", EVENT_FORK),
     ("EXEC", "#EVENT_EXEC_VALUE#", EVENT_EXEC),
     ("OPEN", "#EVENT_OPEN_VALUE#", EVENT_OPEN),
-    ("CONNECT", "#EVENT_CONNECT_VALUE#", EVENT_CONNECT)
+    ("CONNECT", "#EVENT_CONNECT_VALUE#", EVENT_CONNECT),
+    ("ACCEPT", "#EVENT_ACCEPT_VALUE#", EVENT_ACCEPT)
 ]
 
 ebpf_text = """
@@ -39,6 +41,7 @@ ebpf_text = """
 #define _EVENT_EXEC #EVENT_EXEC_VALUE#
 #define _EVENT_OPEN #EVENT_OPEN_VALUE#
 #define _EVENT_CONNECT #EVENT_CONNECT_VALUE#
+#define _EVENT_ACCEPT #EVENT_ACCEPT_VALUE#
 
 struct output_data {
     u8 event_type;
@@ -149,6 +152,28 @@ KRETFUNC_PROBE(tcp_v4_connect, struct sock *sk)
         return 0;
     }
 }
+
+// https://elixir.bootlin.com/linux/latest/source/include/net/tcp.h
+/*
+KRETFUNC_PROBE(tcp_v4_do_rcv, struct sock* sk)
+{
+    u32 pid = bpf_get_current_pid_tgid();
+    if (is_tracked_pid(pid) != _TRUE) return 0;
+    else
+    {
+        struct output_data data = {};
+        data.event_type = _EVENT_ACCEPT;
+        //data.pid = pid;
+        data.pid = sk->__sk_common.skc_family;
+        data.output_int_1 = sk->__sk_common.skc_rcv_saddr; // src addr
+        data.output_int_2 = sk->__sk_common.skc_num; // src port
+        data.output_int_3 = sk->__sk_common.skc_daddr; // dst addr
+        data.output_int_4 = ntohs(sk->__sk_common.skc_dport); // dst port
+        events.perf_submit(ctx, &data, sizeof(data));
+        return 0;
+    }
+}
+*/
 """
 
 if (len(sys.argv) < 2):
@@ -188,7 +213,7 @@ def event_to_json(event):
         "timestamp": time_ns() // 1000000,
     }
     # Create socket strings for connect
-    if event.event_type == EVENT_CONNECT:
+    if event.event_type == EVENT_CONNECT or event.event_type == EVENT_ACCEPT:
         srcaddr = socket.inet_ntoa(struct.pack("<L", event.output_int_1))
         dstaddr = socket.inet_ntoa(struct.pack("<L", event.output_int_3))
         lsocket = f"{srcaddr}:{event.output_int_2}"
