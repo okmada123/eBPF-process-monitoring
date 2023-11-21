@@ -3,6 +3,12 @@ ALLOW_COLOR = "white"
 DENY_COLOR = "red"
 NEUTRAL_COLOR = "white"
 
+EVENT_FORK = "fork"
+EVENT_EXEC = "exec"
+EVENT_OPEN = "open"
+EVENT_CONNECT = "connect"
+EVENT_ACCEPT = "accept"
+
 EVENTS = {}
 RULES = {}
 COLUMNS = {}

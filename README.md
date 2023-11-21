@@ -7,6 +7,8 @@
 - [X] [API] - add config and use colors based on allowed paths/binaries, etc - from the config
 - [ ] [API] - add regex handling for 'connect' (these events use different fields, not 'path')
 - [ ] [connection-accept] - try to track `accept4` instead of `tcp_v4_do_rcv` - will it be possible to read the addresses from there?
+- [ ] - refactor EVENT constants
+- [] [API] - add more granular connection rules
 
 Useful development tool: `bpftrace`
 

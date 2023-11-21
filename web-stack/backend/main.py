@@ -90,11 +90,8 @@ def is_matching(path, regexes):
 def apply_colors(row):
     default_color = config.NEUTRAL_COLOR
     row["color"] = default_color
-    if len(row[config.COLUMNS["path"]]) == 0:
-        return
     
     event_type = row[config.COLUMNS["type"]]
-    path = row[config.COLUMNS["path"]]
     get_rules(event_type)
     allow_regexes, deny_regexes = get_rules(event_type)
     if allow_regexes is None and deny_regexes is None: # No rules for this event
@@ -110,8 +107,17 @@ def apply_colors(row):
         default_color = config.ALLOW_COLOR # non-empty deny list means that everything is allowed by default
         regexes = deny_regexes
         matching_color = config.DENY_COLOR
+
+    match_against = None
+    if event_type == config.EVENT_EXEC or event_type == config.EVENT_FORK:
+        match_against = row[config.COLUMNS["path"]]
+    elif event_type == config.EVENT_CONNECT:
+        match_against = row[config.COLUMNS["output2"]]
     
-    if is_matching(path, regexes):
+    if match_against is None:
+        return
+    
+    if is_matching(match_against, regexes):
         row["color"] = matching_color
     else:
         row["color"] = default_color
