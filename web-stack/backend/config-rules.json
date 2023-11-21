@@ -1,17 +1,12 @@
 {
     "exec": {
-        "Deny": [
-            ".*ping$",
-            ".*curl$",
-            ".*nc"
+        "Allow": [
+            "^/usr/bin/cat$"
         ]
     },
     "open": {
-        "Allow": [
-            "^/etc/hosts$",
-            "^/etc/resolv.conf$",
-            "^/lib.*",
-            ".*"
+        "Deny": [
+            "^/etc/passwd$"
         ]
     }
 }
