@@ -68,6 +68,7 @@ KRETFUNC_PROBE(tcp_v4_connect, struct sock *sk)
 */
 
 /* This works (kinda), but prints every packet which is a little too much... */
+/*
 KRETFUNC_PROBE(tcp_v4_do_rcv, struct sock* sk)
 {
     u32 pid = bpf_get_current_pid_tgid();
@@ -82,6 +83,7 @@ KRETFUNC_PROBE(tcp_v4_do_rcv, struct sock* sk)
         return 0;
     }
 }
+*/
 
 // https://elixir.bootlin.com/linux/v4.7/source/include/net/inet_connection_sock.h#L261
 // This does not work - the socket structure is not filled with data...
@@ -99,6 +101,41 @@ KRETFUNC_PROBE(inet_csk_accept, struct sock* sk)
     return 0;
 }
 */
+
+KRETFUNC_PROBE(__sys_accept4, int sock_fd, struct sockaddr* userspace_addr, int* userspace_addrlen)
+{
+    u32 pid = bpf_get_current_pid_tgid();
+    if (is_tracked_pid(pid) != _TRUE) return 0;
+
+    int addrlen = 0;
+    if (bpf_probe_read_user(&addrlen, sizeof(addrlen), userspace_addrlen) != 0)
+    {
+        bpf_trace_printk("addrlen read from user space failed\\n");
+        return 0;
+    }
+
+    struct sockaddr addr;
+    if (sizeof(addr) < addrlen)
+    {
+        bpf_trace_printk("the length of the socket is larger than expected...\\n");
+        return 0;
+    }
+
+    if (bpf_probe_read_user(&addr, sizeof(addr), userspace_addr) != 0)
+    {
+        bpf_trace_printk("addr read from user space failed\\n");
+        return 0;
+    }
+
+    if (addr.sa_family == AF_INET) // IPv4
+    {
+        struct sockaddr_in* internet_socket = (struct sockaddr_in*)&addr;
+        bpf_trace_printk("IP: %d\\n", internet_socket->sin_addr);
+        bpf_trace_printk("PORT: %d\\n", internet_socket->sin_port);
+    }    
+    
+    return 0;
+}
 
 """
 
