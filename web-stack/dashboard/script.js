@@ -1,6 +1,8 @@
 const API_URL = "http://localhost:8000";
 const RELOAD_INTERVAL = 1000 // ms
 var data = [];
+var show_only_alerts = false;
+const ALERT_COLOR = "red"; // TODO - change
 
 const delete_all = async () => {
     const res = await fetch(`${API_URL}/delete_all`);
@@ -16,6 +18,23 @@ const delete_all = async () => {
     while (table.rows.length != 1) table.deleteRow(1);
 }
 
+const toggle_show_only_alerts = () => {
+    show_only_alerts = !show_only_alerts;
+    
+    // clear the table
+    const table = document.getElementById("events-table");
+    while (table.rows.length != 1) table.deleteRow(1);
+
+    data.forEach(element => {
+        if (show_only_alerts) {
+            if (element.color == ALERT_COLOR) {
+                add_table_row(element);
+            }
+        }
+        else add_table_row(element);
+    })
+}
+
 const fetch_data = async () => {
     let last_ts = (data.length > 0 ? data[data.length-1].timestamp : 0)
     const res = await fetch(`${API_URL}/get_recent?last_timestamp=${last_ts}`);
@@ -24,7 +43,13 @@ const fetch_data = async () => {
     
     new_data.forEach(element => {
         data.push(element); // store locally
-        add_table_row(element);
+        
+        if (show_only_alerts) {
+            if (element.color == ALERT_COLOR) {
+                add_table_row(element);
+            }
+        }
+        else add_table_row(element);
     });
 }
 

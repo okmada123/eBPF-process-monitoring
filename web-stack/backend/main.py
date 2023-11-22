@@ -109,7 +109,7 @@ def apply_colors(row):
         matching_color = config.DENY_COLOR
 
     match_against = None
-    if event_type == config.EVENT_EXEC or event_type == config.EVENT_FORK:
+    if event_type == config.EVENT_EXEC or event_type == config.EVENT_OPEN:
         match_against = row[config.COLUMNS["path"]]
     elif event_type == config.EVENT_CONNECT:
         match_against = row[config.COLUMNS["output2"]]

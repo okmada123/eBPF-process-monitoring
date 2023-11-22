@@ -17,7 +17,10 @@
     </head>
     <body>
         <h1>Dashboard</h1>
-        <p><button onclick="delete_all()">Delete all records</button></p>
+        <p>
+            <button onclick="delete_all()">Delete all records</button>
+            <button onclick="toggle_show_only_alerts()">Toggle alerts only</button>
+        </p>
         <table id="events-table">
             <tr>
                 <th>Timestamp</th>
