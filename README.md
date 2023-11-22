@@ -5,10 +5,10 @@
     - check this https://stackoverflow.com/questions/1188757/retrieve-filename-from-file-descriptor-in-c
 - [X] [API+Dashboard] - add 'color' in API response, and print the rows with this color in the dashboard
 - [X] [API] - add config and use colors based on allowed paths/binaries, etc - from the config
-- [ ] [API] - add regex handling for 'connect' (these events use different fields, not 'path')
+- [X] [API] - add regex handling for 'connect' (these events use different fields, not 'path')
 - [ ] [connection-accept] - try to track `accept4` instead of `tcp_v4_do_rcv` - will it be possible to read the addresses from there?
 - [ ] - refactor EVENT constants
-- [] [API] - add more granular connection rules
+- [X] [API] - add more granular connection rules - regexes handle this actually
 
 Useful development tool: `bpftrace`
 
