@@ -132,6 +132,9 @@ KRETFUNC_PROBE(__sys_accept4, int sock_fd, struct sockaddr* userspace_addr, int*
         struct sockaddr_in* internet_socket = (struct sockaddr_in*)&addr;
         bpf_trace_printk("IP: %d\\n", internet_socket->sin_addr);
         bpf_trace_printk("PORT: %d\\n", ntohs(internet_socket->sin_port));
+        
+        u32 remote = internet_socket->sin_addr.s_addr;
+        bpf_trace_printk("remote: %d\\n", remote);
     }    
     
     return 0;

@@ -153,27 +153,45 @@ KRETFUNC_PROBE(tcp_v4_connect, struct sock *sk)
     }
 }
 
-// https://elixir.bootlin.com/linux/latest/source/include/net/tcp.h
-/*
-KRETFUNC_PROBE(tcp_v4_do_rcv, struct sock* sk)
+// https://elixir.bootlin.com/linux/latest/source/include/linux/socket.h#L445
+// the arguments are pointers to user space memory, so we have to read it using bpf_probe_read_user()
+
+KRETFUNC_PROBE(__sys_accept4, int sock_fd, struct sockaddr* userspace_addr, int* userspace_addrlen)
 {
     u32 pid = bpf_get_current_pid_tgid();
     if (is_tracked_pid(pid) != _TRUE) return 0;
-    else
+
+    int addrlen = 0;
+    if (bpf_probe_read_user(&addrlen, sizeof(addrlen), userspace_addrlen) != 0)
     {
+        return 0; // bpf_probe_read_user() failed, stop
+    }
+
+    struct sockaddr addr;
+    if (sizeof(addr) < addrlen)
+    {
+        return 0; // addrlen should be of size sockaddr
+    }
+
+    if (bpf_probe_read_user(&addr, sizeof(addr), userspace_addr) != 0)
+    {
+        return 0; // bpf_probe_read_user() failed, stop
+    }
+
+    if (addr.sa_family == AF_INET) // we only care about IPv4
+    {
+        struct sockaddr_in* internet_socket = (struct sockaddr_in*)&addr;
         struct output_data data = {};
         data.event_type = _EVENT_ACCEPT;
-        //data.pid = pid;
-        data.pid = sk->__sk_common.skc_family;
-        data.output_int_1 = sk->__sk_common.skc_rcv_saddr; // src addr
-        data.output_int_2 = sk->__sk_common.skc_num; // src port
-        data.output_int_3 = sk->__sk_common.skc_daddr; // dst addr
-        data.output_int_4 = ntohs(sk->__sk_common.skc_dport); // dst port
+        data.pid = pid;
+        data.output_int_1 = internet_socket->sin_addr.s_addr; // remote addr
+        data.output_int_2 = ntohs(internet_socket->sin_port); // remote port
         events.perf_submit(ctx, &data, sizeof(data));
-        return 0;
     }
+    
+    return 0;
 }
-*/
+
 """
 
 if (len(sys.argv) < 2):
@@ -213,13 +231,16 @@ def event_to_json(event):
         "timestamp": time_ns() // 1000000,
     }
     # Create socket strings for connect
-    if event.event_type == EVENT_CONNECT or event.event_type == EVENT_ACCEPT:
+    if event.event_type == EVENT_CONNECT:
         srcaddr = socket.inet_ntoa(struct.pack("<L", event.output_int_1))
         dstaddr = socket.inet_ntoa(struct.pack("<L", event.output_int_3))
         lsocket = f"{srcaddr}:{event.output_int_2}"
         dsocket = f"{dstaddr}:{event.output_int_4}"
         json_dict["event_output_1"] = lsocket
         json_dict["event_output_2"] = dsocket
+    elif event.event_type == EVENT_ACCEPT:
+        remoteaddr = socket.inet_ntoa(struct.pack("<L", event.output_int_1))
+        json_dict["event_output_1"] = remoteaddr
     
     return json.dumps(json_dict)
 
