@@ -1,7 +1,6 @@
 {
     "exec": {
         "Allow": [
-            "^/usr/bin/cat$",
             "^/usr/bin/ls$"
         ]
     },

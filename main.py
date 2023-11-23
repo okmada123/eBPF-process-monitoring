@@ -18,11 +18,11 @@ EVENT_CONNECT = 4
 EVENT_ACCEPT = 5
 
 EVENT_VALUES = [
-    ("FORK", "#EVENT_FORK_VALUE#", EVENT_FORK),
-    ("EXEC", "#EVENT_EXEC_VALUE#", EVENT_EXEC),
-    ("OPEN", "#EVENT_OPEN_VALUE#", EVENT_OPEN),
-    ("CONNECT", "#EVENT_CONNECT_VALUE#", EVENT_CONNECT),
-    ("ACCEPT", "#EVENT_ACCEPT_VALUE#", EVENT_ACCEPT)
+    ("#EVENT_FORK_VALUE#", EVENT_FORK),
+    ("#EVENT_EXEC_VALUE#", EVENT_EXEC),
+    ("#EVENT_OPEN_VALUE#", EVENT_OPEN),
+    ("#EVENT_CONNECT_VALUE#", EVENT_CONNECT),
+    ("#EVENT_ACCEPT_VALUE#", EVENT_ACCEPT)
 ]
 
 ebpf_text = """
@@ -215,7 +215,7 @@ if (len(monitored_pids) > 1):
 ebpf_text = ebpf_text.replace("#DEFAULT_PID#", monitored_pids_replace_string)
 
 for event in EVENT_VALUES:
-    ebpf_text = ebpf_text.replace(event[1], str(event[2]))
+    ebpf_text = ebpf_text.replace(event[0], str(event[1]))
 
 # Load the eBPF program
 b = BPF(text=ebpf_text)
