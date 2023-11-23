@@ -4,6 +4,15 @@ var data = [];
 var show_only_alerts = false;
 const ALERT_COLOR = "red"; // TODO - change
 
+const COLOR_SETTINGS = {
+    0: "white", // default color
+    1: "red", // alert color
+}
+
+// Alert levels
+const ALERT_ALLOW = 0
+const ALERT_DENY = 1
+
 const delete_all = async () => {
     const res = await fetch(`${API_URL}/delete_all`);
     if (res.status != 200) {
@@ -27,7 +36,7 @@ const toggle_show_only_alerts = () => {
 
     data.forEach(element => {
         if (show_only_alerts) {
-            if (element.color == ALERT_COLOR) {
+            if (element.alert_level == ALERT_DENY) {
                 add_table_row(element);
             }
         }
@@ -45,7 +54,7 @@ const fetch_data = async () => {
         data.push(element); // store locally
         
         if (show_only_alerts) {
-            if (element.color == ALERT_COLOR) {
+            if (element.alert_level == ALERT_DENY) {
                 add_table_row(element);
             }
         }
@@ -63,12 +72,7 @@ const add_table_row = (element) => {
     row.innerHTML += `<th>${element["path"]}</th>`
     row.innerHTML += `<th>${element["event_output_1"]}</th>`
     row.innerHTML += `<th>${element["event_output_2"]}</th>`
-    row.style.backgroundColor = element["color"]
-    
-    // This dumps the row in the order that it comes in from backend
-    // for (var key of Object.keys(element)) {
-    //     row.innerHTML += `<th>${element[key]}</th>`
-    // }
+    row.style.backgroundColor = COLOR_SETTINGS[element["alert_level"]]
 }
 
 const mainloop = async () => {

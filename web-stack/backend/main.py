@@ -25,24 +25,14 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return "Hello!!!"
+    return "Hello, you've reached the API!!!"
 
 @app.get("/delete_all")
 def delete_all_rows():
     try:
         collection.delete_many({})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Removing the rows failed for some reason. {str(e)}")
-
-@app.get("/get_recent")
-def get_new_data(last_timestamp = Query(None)):
-    try:
-        last_timestamp = int(last_timestamp)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Bad request. Expecting ?last_timestamp=INTEGER. {str(e)}")
-    data = list(collection.find({"timestamp": {"$gt": int(last_timestamp)}}))
-    format_data(data)
-    return json.dumps(data, default=str)
+        raise HTTPException(status_code=500, detail=f"Removing the rows failed. {str(e)}")
 
 # Dump everything, unformatted
 @app.get("/get_all")
@@ -56,13 +46,23 @@ async def log_one(request: Request):
         data = await request.json()
         collection.insert_one(data)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error inserting data: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error inserting data. {str(e)}")
+
+@app.get("/get_recent")
+def get_new_data(last_timestamp = Query(None)):
+    try:
+        last_timestamp = int(last_timestamp)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Bad request. Expecting ?last_timestamp=INTEGER. {str(e)}")
+    data = list(collection.find({"timestamp": {"$gt": int(last_timestamp)}}))
+    format_data(data)
+    return json.dumps(data, default=str)
 
 def format_data(data):
     for row in data:
         row.pop(config.COLUMNS["id"]) # remove mongo _id
         row[config.COLUMNS["type"]] = config.EVENTS[str(row[config.COLUMNS["type"]])] # replace event_type (integer) with text equivalent
-        apply_colors(row) # apply correct color to the data row
+        apply_rules(row) # apply rules to the data row
     return data
 
 def get_rules(event_type):
@@ -87,9 +87,9 @@ def is_matching(path, regexes):
             return True
     return False
 
-def apply_colors(row):
-    default_color = config.NEUTRAL_COLOR
-    row["color"] = default_color
+def apply_rules(row):
+    default_alert_level = config.ALERT_ALLOW
+    row["alert_level"] = default_alert_level
     
     event_type = row[config.COLUMNS["type"]]
     get_rules(event_type)
@@ -98,15 +98,15 @@ def apply_colors(row):
         return
     
     regexes = []
-    matching_color = None
+    matching_alert_level = None
     if allow_regexes is not None: # non-empty allow list means that everything is denied by default
-        default_color = config.DENY_COLOR
+        default_alert_level = config.ALERT_DENY
         regexes = allow_regexes
-        matching_color = config.ALLOW_COLOR
+        matching_alert_level = config.ALERT_ALLOW
     else:
-        default_color = config.ALLOW_COLOR # non-empty deny list means that everything is allowed by default
+        default_alert_level = config.ALERT_ALLOW # non-empty deny list means that everything is allowed by default
         regexes = deny_regexes
-        matching_color = config.DENY_COLOR
+        matching_alert_level = config.ALERT_DENY
 
     match_against = None
     if event_type == config.EVENT_EXEC or event_type == config.EVENT_OPEN:
@@ -118,6 +118,6 @@ def apply_colors(row):
         return
     
     if is_matching(match_against, regexes):
-        row["color"] = matching_color
+        row["alert_level"] = matching_alert_level
     else:
-        row["color"] = default_color
+        row["alert_level"] = default_alert_level

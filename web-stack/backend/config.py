@@ -1,8 +1,10 @@
 import json
-ALLOW_COLOR = "white"
-DENY_COLOR = "red"
-NEUTRAL_COLOR = "white"
 
+# Alert levels
+ALERT_ALLOW = 0
+ALERT_DENY = 1
+
+# Because we want to use these strings in the config-rules.json
 EVENT_FORK = "fork"
 EVENT_EXEC = "exec"
 EVENT_OPEN = "open"
