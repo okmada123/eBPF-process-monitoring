@@ -3,8 +3,6 @@ services:
   fastapi.local:
     build:
       context: ./backend
-    ports:
-      - "8000:8000"
     networks:
       - sharednet
     volumes:
@@ -19,16 +17,16 @@ services:
       - sharednet
     volumes:
       - ./mongo/init.js:/docker-entrypoint-initdb.d/mongo-init.js
-  dashboard.local:
+  proxy-dashboard.local:
     build:
-      context: ./dashboard
+      context: ./proxy-dashboard
     ports:
       - "8080:80"
     networks:
       - sharednet
     volumes:
-      - ./dashboard/index.html:/usr/share/nginx/html/index.html
-      - ./dashboard/script.js:/usr/share/nginx/html/script.js
+      - ./proxy-dashboard/index.html:/usr/share/nginx/html/index.html
+      - ./proxy-dashboard/script.js:/usr/share/nginx/html/script.js
 
 networks:
   sharednet:

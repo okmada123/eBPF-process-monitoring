@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000";
+const API_URL = "http://localhost:8080/api";
 const RELOAD_INTERVAL = 1000 // ms
 var data = [];
 var show_only_alerts = false;

@@ -6,7 +6,7 @@
 - [X] [API+Dashboard] - add 'color' in API response, and print the rows with this color in the dashboard
 - [X] [API] - add config and use colors based on allowed paths/binaries, etc - from the config
 - [X] [API] - add regex handling for 'connect' (these events use different fields, not 'path')
-- [ ] [connection-accept] - try to track `accept4` instead of `tcp_v4_do_rcv` - will it be possible to read the addresses from there?
+- [X] [connection-accept] - try to track `accept4` instead of `tcp_v4_do_rcv` - will it be possible to read the addresses from there? - Done, but can only read remote address (which is probably okay...)
 - [ ] - refactor EVENT constants
 - [X] [API] - add more granular connection rules - regexes handle this actually
 

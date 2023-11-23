@@ -9,7 +9,7 @@ USE_BACKEND_TOGGLE = True # TODO - remove
 C_CODE_PID_VARIABLE = "pid" # variable name representing the PID in the C code, preceeding #DEFAULT_PID# placeholder
 
 load_dotenv()
-API_URL = f"http://{os.getenv('API_HOST')}:{os.getenv('API_PORT')}/log"
+API_URL = f"http://{os.getenv('API_HOST')}:{os.getenv('API_PORT')}{os.getenv('API_PROXY')}/log"
 
 EVENT_FORK = 1
 EVENT_EXEC = 2
