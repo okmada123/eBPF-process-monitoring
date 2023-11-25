@@ -4,14 +4,15 @@ var data = [];
 var show_only_alerts = false;
 const ALERT_COLOR = "red"; // TODO - change
 
-const COLOR_SETTINGS = {
-    0: "white", // default color
-    1: "red", // alert color
-}
-
 // Alert levels
 const ALERT_ALLOW = 0
 const ALERT_DENY = 1
+
+const COLOR_SETTINGS = {
+    [ALERT_ALLOW]: "white", // default color
+    [ALERT_DENY]: "red", // alert color
+}
+
 
 const delete_all = async () => {
     const res = await fetch(`${API_URL}/delete_all`);
