@@ -14,10 +14,9 @@ db = mongo_client[os.getenv('DB_NAME')]
 collection = db["default"]
 
 app = FastAPI()
-origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -113,6 +112,8 @@ def apply_rules(row):
         match_against = row[config.COLUMNS["path"]]
     elif event_type == config.EVENT_CONNECT:
         match_against = row[config.COLUMNS["output2"]]
+    elif event_type == config.EVENT_ACCEPT:
+        match_against = row[config.COLUMNS["output1"]]
     
     if match_against is None:
         return

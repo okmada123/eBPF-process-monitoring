@@ -127,7 +127,6 @@ KRETFUNC_PROBE(tcp_v4_connect, struct sock *sk)
 
 // https://elixir.bootlin.com/linux/latest/source/include/linux/socket.h#L445
 // the arguments are pointers to user space memory, so we have to read it using bpf_probe_read_user()
-
 KRETFUNC_PROBE(__sys_accept4, int sock_fd, struct sockaddr* userspace_addr, int* userspace_addrlen)
 {
     u32 pid = bpf_get_current_pid_tgid();

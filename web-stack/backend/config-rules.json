@@ -6,12 +6,18 @@
     },
     "open": {
         "Deny": [
-            "^/etc/passwd$"
+            "^/etc/passwd$",
+            "^/etc/shadow/$"
         ]
     },
     "connect": {
+        "Allow": [
+            "127.0.0.1:[0-9]+"
+        ]
+    },
+    "accept": {
         "Deny": [
-            "127.0.0.1:8888"
+            "127.0.0.1:[0-9]+"
         ]
     }
 }

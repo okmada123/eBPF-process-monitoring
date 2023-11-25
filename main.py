@@ -76,8 +76,10 @@ def event_to_json(event):
         json_dict["event_output_1"] = lsocket
         json_dict["event_output_2"] = dsocket
     elif event.event_type == EVENT_ACCEPT:
-        remoteaddr = socket.inet_ntoa(struct.pack("<L", event.output_int_1))
-        json_dict["event_output_1"] = remoteaddr
+        raddr = socket.inet_ntoa(struct.pack("<L", event.output_int_1))
+        rport = json_dict["event_output_2"]
+        json_dict["event_output_1"] = f"{raddr}:{rport}"
+        json_dict["event_output_2"] = 0
     
     return json.dumps(json_dict)
 
@@ -90,7 +92,7 @@ def log_event(cpu, data, size):
         if res.status_code != 200:
             print("Response not OK:", res.status_code)
     except Exception as e:
-        print(e)
+        print(str(e))
         exit(1)
 
 print(f"Monitoring of {monitored_pids} started...")
