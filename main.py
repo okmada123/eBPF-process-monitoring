@@ -47,10 +47,10 @@ struct output_data {
     u8 event_type;
     u32 pid;
     char path[BUFSIZE];
-    u32 output_int_1;
-    u32 output_int_2;
-    u32 output_int_3;
-    u32 output_int_4;
+    int output_int_1;
+    int output_int_2;
+    int output_int_3;
+    int output_int_4;
 };
 BPF_PERF_OUTPUT(events);
 
@@ -111,7 +111,7 @@ int syscall__execve(struct pt_regs *ctx, const char *filename)
     }
 }
 
-KRETFUNC_PROBE(do_sys_openat2, int dirfd, const char *pathname)
+KRETFUNC_PROBE(do_sys_openat2, int dirfd, const char *pathname, void* openhow, int ret)
 {
     u32 pid = bpf_get_current_pid_tgid();
     if (is_tracked_pid(pid) != _TRUE) return 0;
@@ -120,13 +120,13 @@ KRETFUNC_PROBE(do_sys_openat2, int dirfd, const char *pathname)
     if (bpf_probe_read_user(&data.path, sizeof(data.path), pathname) == 0) {
         data.pid = pid;
         data.event_type = _EVENT_OPEN;
+        data.output_int_2 = ret;
         if (data.path[0] == '/')
             data.output_int_1 = _TRUE; // is absolute path
         else {
             if (dirfd == AT_FDCWD)
                 data.output_int_1 = _FALSE; // is relative path at CWD
             // else // is relative path not at CWD - don't know if this could even happen
-                // bpf_trace_printk("relative path file open: %s, NOT the current working directory... (%d)\\n", buff, dirfd);
         }
         events.perf_submit(ctx, &data, sizeof(data));
     }
