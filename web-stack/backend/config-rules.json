@@ -1,21 +1,18 @@
 {
     "exec": {
-        "Allow": []
+        "Allow": [
+            "^/usr/bin/cat$"
+        ]
     },
     "open": {
-        "Allow": [
-            "^/var/www/html/index.php$",
-            "^/var/www/html/uploads/[^/]+$",
-            "^/var/www/html/uploads/$",
-            "^/tmp/php[a-zA-Z0-9]{6}$",
-            "^/usr/share/apache2/icons/image2.gif$",
-            "^/usr/share/apache2/icons/back.gif$",
-            "^/usr/share/apache2/icons/blank.gif$",
-            "^/usr/share/apache2/icons/unknown.gif$"
+        "Deny": [
+            "^/etc/passwd$"
         ]
     },
     "connect": {
-        "Allow": []
+        "Allow": [
+            "127.0.0.1:[0-9]+"
+        ]
     },
     "accept": {
         "Allow": [
